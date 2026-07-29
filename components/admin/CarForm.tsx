@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { carFormSchema, CarFormValues } from "@/lib/schemas/car-schema";
-import { BRANDS, MANUFACTURERS, SCALES, MATERIALS } from "@/lib/constants/brands-manufacturers";
+import { SCALES, MATERIALS } from "@/lib/constants/brands-manufacturers";
 import ImageUploader from "./ImageUploader";
 import { Car } from "@/lib/types/car";
 import { ArrowLeft, Save, Sparkles, Upload, X, Loader2, ImageIcon } from "lucide-react";
@@ -22,17 +22,11 @@ interface CarFormProps {
 // Gallery item: a file pending upload, or an already-uploaded URL (edit mode)
 // --------------------------------------------------------------------------
 interface GalleryItem {
-  /** stable key for React list */
   key: string;
-  /** object URL for local preview; null once uploaded or when loading from DB */
   previewUrl: string | null;
-  /** Supabase CDN URL once uploaded; null while pending */
   uploadedUrl: string | null;
-  /** original filename for display */
   name: string;
-  /** whether this item is currently being uploaded */
   uploading: boolean;
-  /** upload error specific to this item */
   error: string | null;
 }
 
@@ -46,7 +40,6 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialise gallery items from existing car_images (edit mode)
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(() =>
     (initialCar?.car_images ?? []).map((img) => ({
       key: makeKey(),
@@ -69,16 +62,14 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
     resolver: zodResolver(carFormSchema) as any,
     defaultValues: {
       name: initialCar?.name || "",
-      brand: initialCar?.brand || BRANDS[0],
-      manufacturer: initialCar?.manufacturer || MANUFACTURERS[0],
+      brand: initialCar?.brand || "",
+      manufacturer: initialCar?.manufacturer || "",
       series: initialCar?.series || "",
       scale: initialCar?.scale || SCALES[0],
-      year: initialCar?.year || new Date().getFullYear(),
+      // year intentionally omitted from defaultValues — undefined → null via schema
       color: initialCar?.color || "",
       material: initialCar?.material || MATERIALS[0],
       opening_parts: initialCar?.opening_parts || false,
-      purchase_date: initialCar?.purchase_date || "",
-      purchase_price: initialCar?.purchase_price || undefined,
       description: initialCar?.description || "",
       cover_image: initialCar?.cover_image || "",
       gallery_images: initialCar?.car_images?.map((img) => img.image_url) || [],
@@ -87,7 +78,6 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
 
   const coverImageValue = watch("cover_image");
 
-  // Sync gallery items' uploaded URLs into the RHF field whenever items change
   const syncGalleryToForm = (items: GalleryItem[]) => {
     const urls = items
       .filter((i) => i.uploadedUrl !== null)
@@ -95,18 +85,15 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
     setValue("gallery_images", urls);
   };
 
-  // -------------------------------------------------------------------------
-  // Gallery — file selection handler
-  // -------------------------------------------------------------------------
+  // ── Gallery file selection ───────────────────────────────────────────────
   const handleGalleryFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
-    e.target.value = ""; // reset so the same files can be re-selected
+    e.target.value = "";
 
     const VALID_TYPES = ["image/jpeg", "image/png", "image/webp"];
     const MAX_SIZE = 10 * 1024 * 1024;
 
-    // Create pending items immediately so the UI shows the thumbnails right away
     const newItems: GalleryItem[] = files.map((file) => {
       const typeOk = VALID_TYPES.includes(file.type);
       const sizeOk = file.size <= MAX_SIZE;
@@ -123,7 +110,7 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
         name: file.name,
         uploading: typeOk && sizeOk,
         error: errorMsg,
-        _file: file, // attach temporarily for upload
+        _file: file,
       } as GalleryItem & { _file: File };
     });
 
@@ -133,7 +120,6 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
       return next;
     });
 
-    // Upload valid files concurrently
     await Promise.all(
       newItems.map(async (item) => {
         const itemWithFile = item as GalleryItem & { _file?: File };
@@ -153,7 +139,7 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                     ...i,
                     uploading: false,
                     uploadedUrl: res.ok ? json.url : null,
-                    error: res.ok ? null : (json.error || "Upload failed"),
+                    error: res.ok ? null : json.error || "Upload failed",
                   }
                 : i
             );
@@ -185,13 +171,9 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
     });
   };
 
-  // -------------------------------------------------------------------------
-  // Form submit
-  // -------------------------------------------------------------------------
+  // ── Submit ───────────────────────────────────────────────────────────────
   const onFormSubmit = async (values: CarFormValues) => {
-    // Reject submit if any gallery item is still uploading
-    const stillUploading = galleryItems.some((i) => i.uploading);
-    if (stillUploading) {
+    if (galleryItems.some((i) => i.uploading)) {
       setServerError("Please wait — some images are still uploading.");
       return;
     }
@@ -242,13 +224,7 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
             className="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            {isSubmitting
-              ? "Saving..."
-              : anyUploading
-              ? "Uploading..."
-              : isEditing
-              ? "Update Car"
-              : "Save Car"}
+            {isSubmitting ? "Saving..." : anyUploading ? "Uploading..." : isEditing ? "Update Car" : "Save Car"}
           </button>
         </div>
       </div>
@@ -261,105 +237,103 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
 
       {/* ── Main Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: 8 cols */}
+        {/* Left Column */}
         <div className="lg:col-span-8 space-y-6">
-          {/* General Model Information */}
+
+          {/* ── General Model Information ── */}
           <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-6 space-y-4">
             <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider border-b border-zinc-800 pb-3">
               General Model Information
             </h2>
 
-            <div className="space-y-4">
+            {/* Car Name */}
+            <div>
+              <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">
+                Car Name *
+              </label>
+              <input
+                type="text"
+                {...register("name")}
+                placeholder="e.g. Porsche 911 GT3 RS (992)"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
+              />
+              {errors.name && (
+                <p className="text-rose-400 text-[11px] font-mono mt-1">{errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Brand — free text */}
               <div>
                 <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">
-                  Car Name *
+                  Brand *
                 </label>
                 <input
                   type="text"
-                  {...register("name")}
-                  placeholder="e.g. Porsche 911 GT3 RS (992)"
+                  {...register("brand")}
+                  placeholder="e.g. Honda, Porsche, Ferrari"
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
                 />
-                {errors.name && (
-                  <p className="text-rose-400 text-[11px] font-mono mt-1">{errors.name.message}</p>
+                {errors.brand && (
+                  <p className="text-rose-400 text-[11px] font-mono mt-1">{errors.brand.message}</p>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">
-                    Brand *
-                  </label>
-                  <select
-                    {...register("brand")}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500"
-                  >
-                    {BRANDS.map((b) => (
-                      <option key={b} value={b}>{b}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">
-                    Die-Cast Manufacturer *
-                  </label>
-                  <select
-                    {...register("manufacturer")}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500"
-                  >
-                    {MANUFACTURERS.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
+              {/* Die-Cast Manufacturer — free text */}
               <div>
                 <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">
-                  Series / Collection Line (Optional)
+                  Die-Cast Manufacturer *
                 </label>
                 <input
                   type="text"
-                  {...register("series")}
-                  placeholder="e.g. Exotic Series #412"
+                  {...register("manufacturer")}
+                  placeholder="e.g. Hot Wheels Premium, Mini GT, Inno64"
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
                 />
+                {errors.manufacturer && (
+                  <p className="text-rose-400 text-[11px] font-mono mt-1">{errors.manufacturer.message}</p>
+                )}
               </div>
+            </div>
+
+            {/* Series */}
+            <div>
+              <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">
+                Series / Collection Line (Optional)
+              </label>
+              <input
+                type="text"
+                {...register("series")}
+                placeholder="e.g. Exotic Series #412"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
+              />
             </div>
           </div>
 
-          {/* Specifications & Features */}
+          {/* ── Specifications & Features ── */}
           <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-6 space-y-4">
             <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider border-b border-zinc-800 pb-3">
               Specifications & Features
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Scale */}
               <div>
                 <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">Scale *</label>
                 <select
                   {...register("scale")}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500"
                 >
                   {SCALES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">Model Year *</label>
-                <input
-                  type="number"
-                  {...register("year")}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white"
-                />
-              </div>
-
+              {/* Material */}
               <div>
                 <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">Material *</label>
                 <select
                   {...register("material")}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500"
                 >
                   {MATERIALS.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
@@ -367,16 +341,21 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Finish Color */}
               <div>
                 <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">Finish Color *</label>
                 <input
                   type="text"
                   {...register("color")}
                   placeholder="e.g. Guards Red / Black Wheels"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
                 />
+                {errors.color && (
+                  <p className="text-rose-400 text-[11px] font-mono mt-1">{errors.color.message}</p>
+                )}
               </div>
 
+              {/* Opening Parts */}
               <div className="flex items-center pt-5">
                 <label className="relative flex items-center gap-3 cursor-pointer">
                   <input
@@ -391,6 +370,7 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
               </div>
             </div>
 
+            {/* Description */}
             <div>
               <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">
                 Description & Notes
@@ -403,40 +383,9 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
               />
             </div>
           </div>
-
-          {/* Acquisition Details */}
-          <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-6 space-y-4">
-            <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider border-b border-zinc-800 pb-3">
-              Acquisition Details (Optional)
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">Purchase Date</label>
-                <input
-                  type="date"
-                  {...register("purchase_date")}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-mono font-bold text-zinc-300 uppercase block mb-1">
-                  Purchase Price ($ USD)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register("purchase_price")}
-                  placeholder="e.g. 24.50"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500"
-                />
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Right Column: Media — 4 cols */}
+        {/* Right Column: Media */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-6 space-y-6">
             <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider border-b border-zinc-800 pb-3">
@@ -461,7 +410,6 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                   Gallery Images ({galleryItems.filter((i) => i.uploadedUrl).length})
                 </label>
 
-                {/* Hidden multi-file input */}
                 <input
                   ref={galleryInputRef}
                   type="file"
@@ -481,9 +429,7 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                 </button>
               </div>
 
-              {/* Gallery thumbnails */}
               {galleryItems.length === 0 ? (
-                /* Empty state drop zone */
                 <button
                   type="button"
                   onClick={() => galleryInputRef.current?.click()}
@@ -492,9 +438,7 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                   <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
                     <ImageIcon className="w-5 h-5" />
                   </div>
-                  <span className="text-[11px] text-zinc-400 font-mono">
-                    Click to add gallery images
-                  </span>
+                  <span className="text-[11px] text-zinc-400 font-mono">Click to add gallery images</span>
                   <span className="text-[10px] text-zinc-600 font-mono">
                     Select multiple · JPEG, PNG, WEBP · Max 10 MB each
                   </span>
@@ -506,14 +450,13 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                       key={item.key}
                       className="relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 aspect-square group"
                     >
-                      {/* Thumbnail */}
                       {item.previewUrl || item.uploadedUrl ? (
                         <Image
                           src={(item.previewUrl || item.uploadedUrl) as string}
                           alt={item.name}
                           fill
                           className="object-cover"
-                          unoptimized={!!(item.previewUrl)}
+                          unoptimized={!!item.previewUrl}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -521,7 +464,6 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                         </div>
                       )}
 
-                      {/* Uploading spinner overlay */}
                       {item.uploading && (
                         <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-1">
                           <Loader2 className="w-5 h-5 text-rose-400 animate-spin" />
@@ -529,7 +471,6 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                         </div>
                       )}
 
-                      {/* Error overlay */}
                       {item.error && (
                         <div className="absolute inset-0 bg-rose-950/80 flex flex-col items-center justify-center gap-1 p-1">
                           <span className="text-[9px] text-rose-300 font-mono text-center leading-tight">
@@ -538,7 +479,6 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                         </div>
                       )}
 
-                      {/* Hover remove button */}
                       {!item.uploading && (
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <button

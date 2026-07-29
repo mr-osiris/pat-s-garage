@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/navbar/Navbar";
-import Hero from "@/components/hero/Hero";
 import FilterSidebar from "@/components/filters/FilterSidebar";
 import MobileFilterDrawer from "@/components/filters/MobileFilterDrawer";
 import CollectionGrid from "@/components/collection/CollectionGrid";
@@ -15,8 +14,6 @@ const initialFilterState: FilterState = {
   brand: "all",
   manufacturer: "all",
   scale: "all",
-  yearMin: "",
-  yearMax: "",
 };
 
 export default function HomePage() {
@@ -100,10 +97,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col justify-between">
       <div>
         <Navbar isAdminLoggedIn={isAdminLoggedIn} />
-        <Hero />
 
-        {/* Main Content Showcase */}
-        <main id="collection" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Collection — pt-[72px] clears the fixed navbar (~68px tall) */}
+        <main id="collection" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[72px] pb-16">
           <MobileFilterDrawer
             filters={filters}
             onFilterChange={handleFilterChange}
