@@ -8,7 +8,6 @@ import { revalidatePath } from "next/cache";
 // ---------------------------------------------------------------------------
 // getCars — fetches all non-deleted cars, optionally filtered.
 // Returns [] when the table is empty — this is NOT an error.
-// Throws if Supabase returns an actual database error.
 // ---------------------------------------------------------------------------
 export async function getCars(filters?: {
   search?: string;
@@ -42,19 +41,15 @@ export async function getCars(filters?: {
   const { data, error } = await query;
 
   if (error) {
-    // Real database error — log it and surface an empty array so the UI
-    // shows its "No cars found" state rather than crashing.
     console.error("[getCars] Supabase error:", error.message);
     return [];
   }
 
-  // data is [] when the table is empty — return it as-is.
   return (data as Car[]) ?? [];
 }
 
 // ---------------------------------------------------------------------------
 // getCarById — fetches a single car by id.
-// Returns null when not found (valid). Throws on Supabase errors.
 // ---------------------------------------------------------------------------
 export async function getCarById(id: string): Promise<Car | null> {
   const supabase = await createClient();
@@ -67,7 +62,6 @@ export async function getCarById(id: string): Promise<Car | null> {
     .single();
 
   if (error) {
-    // PGRST116 = "no rows returned" — not an error, just not found.
     if (error.code === "PGRST116") return null;
     console.error("[getCarById] Supabase error:", error.message);
     return null;
@@ -92,12 +86,11 @@ export async function createCar(
       manufacturer: values.manufacturer,
       series: values.series || null,
       scale: values.scale,
-      year: values.year,
+      year: values.year ?? null,       // null when not provided
       color: values.color,
       material: values.material,
       opening_parts: values.opening_parts,
-      purchase_date: values.purchase_date || null,
-      purchase_price: values.purchase_price || null,
+      // purchase_date / purchase_price intentionally omitted — left NULL
       description: values.description || null,
       cover_image: values.cover_image,
     })
@@ -118,8 +111,6 @@ export async function createCar(
     const { error: imgError } = await supabase.from("car_images").insert(imageRows);
     if (imgError) {
       console.error("[createCar] Gallery images error:", imgError.message);
-      // Car was created successfully — don't fail the whole operation,
-      // but surface the warning.
     }
   }
 
@@ -145,12 +136,11 @@ export async function updateCar(
       manufacturer: values.manufacturer,
       series: values.series || null,
       scale: values.scale,
-      year: values.year,
+      year: values.year ?? null,
       color: values.color,
       material: values.material,
       opening_parts: values.opening_parts,
-      purchase_date: values.purchase_date || null,
-      purchase_price: values.purchase_price || null,
+      // purchase_date / purchase_price intentionally omitted — left as-is
       description: values.description || null,
       cover_image: values.cover_image,
       updated_at: new Date().toISOString(),
@@ -162,7 +152,6 @@ export async function updateCar(
     return { success: false, error: updateError.message };
   }
 
-  // Delete existing gallery images then re-insert
   await supabase.from("car_images").delete().eq("car_id", id);
 
   if (values.gallery_images && values.gallery_images.length > 0) {

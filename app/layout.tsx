@@ -16,36 +16,35 @@ const monoFont = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "DieCast Vault | Luxury Precision Model Car Showroom",
-    template: "%s | DieCast Vault",
+    default: "Pattu's D.Garage | Die-Cast Collection Showroom",
+    template: "%s | Pattu's D.Garage",
   },
   description:
-    "A modern digital showroom for curated premium die-cast model cars. Featuring Mini GT, Inno64, Ignition Model, Tarmac Works, and 1:64 / 1:43 / 1:18 precision scale replicas.",
+    "A personal digital showroom for precision die-cast model cars. Featuring 1:64, 1:43, and 1:18 scale replicas from Mini GT, Inno64, Hot Wheels Premium, and more.",
   keywords: [
-    "DieCast",
+    "Die-Cast",
     "Model Cars",
     "1:64 Scale",
     "Mini GT",
     "Inno64",
-    "Ignition Model",
-    "Porsche",
+    "Hot Wheels",
     "Car Collection",
     "Digital Showroom",
+    "Pattu D.Garage",
   ],
-  authors: [{ name: "DieCast Vault Curator" }],
-  creator: "DieCast Vault",
+  authors: [{ name: "Pattu" }],
+  creator: "Pattu's D.Garage",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://diecast-vault.vercel.app",
-    title: "DieCast Vault | Luxury Precision Model Car Showroom",
+    title: "Pattu's D.Garage | Die-Cast Collection Showroom",
     description:
-      "A curated digital catalogue of premium precision die-cast model cars.",
-    siteName: "DieCast Vault",
+      "A personal curated catalogue of precision die-cast model cars.",
+    siteName: "Pattu's D.Garage",
   },
   twitter: {
     card: "summary_large_image",
-    title: "DieCast Vault | Luxury Model Car Showroom",
+    title: "Pattu's D.Garage | Die-Cast Collection",
     description: "Curated collection of 1:64, 1:43 & 1:18 die-cast models.",
   },
   robots: {

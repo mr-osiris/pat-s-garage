@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS public.cars (
   manufacturer TEXT NOT NULL,
   series TEXT,
   scale TEXT NOT NULL DEFAULT '1:64',
-  year INTEGER NOT NULL,
+  -- Migration for existing databases: ALTER TABLE public.cars ALTER COLUMN year DROP NOT NULL;
+  year INTEGER,
   color TEXT NOT NULL,
   material TEXT NOT NULL DEFAULT 'Die-Cast Metal',
   opening_parts BOOLEAN NOT NULL DEFAULT false,

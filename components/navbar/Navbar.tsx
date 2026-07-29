@@ -5,18 +5,6 @@ import Link from "next/link";
 import { ShieldCheck, Car, Menu, X, Info, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-function GithubIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
-
 export default function Navbar({ isAdminLoggedIn }: { isAdminLoggedIn?: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -35,31 +23,32 @@ export default function Navbar({ isAdminLoggedIn }: { isAdminLoggedIn?: boolean 
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-[#09090b]/85 backdrop-blur-md border-b border-zinc-800/80 py-3 shadow-2xl"
-            : "bg-gradient-to-b from-[#09090b]/90 to-transparent py-5 border-b border-transparent"
+            ? "bg-[#09090b]/90 backdrop-blur-md border-b border-zinc-800/80 py-3 shadow-2xl"
+            : "bg-[#09090b]/90 backdrop-blur-sm border-b border-zinc-800/60 py-4"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="group flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-600 to-rose-800 flex items-center justify-center shadow-lg shadow-rose-950/40 group-hover:scale-105 transition-transform duration-300">
-              <Car className="w-5 h-5 text-white" />
+          {/* Logo / Brand */}
+          <Link href="/" className="group flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-600 to-rose-800 flex items-center justify-center shadow-lg shadow-rose-950/40 group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+              <Car className="w-4.5 h-4.5 text-white w-[18px] h-[18px]" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-extrabold tracking-wider text-white flex items-center gap-1.5 font-sans">
-                DIECAST <span className="text-rose-500 font-mono font-medium">VAULT</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-extrabold tracking-tight text-white font-sans leading-tight whitespace-nowrap">
+                Pattu&apos;s{" "}
+                <span className="text-rose-500 font-mono">D.Garage</span>
               </span>
-              <span className="text-[10px] text-zinc-400 tracking-widest uppercase font-mono">
+              <span className="text-[9px] text-zinc-400 tracking-widest uppercase font-mono leading-tight">
                 Digital Showroom
               </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium flex-shrink-0">
             <Link
               href="/#collection"
-              className="text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5"
+              className="text-zinc-300 hover:text-white transition-colors"
             >
               Collection
             </Link>
@@ -72,17 +61,7 @@ export default function Navbar({ isAdminLoggedIn }: { isAdminLoggedIn?: boolean 
               About
             </button>
 
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-1.5"
-            >
-              <GithubIcon className="w-4 h-4" />
-              GitHub
-            </a>
-
-            {/* Admin Portal Button */}
+            {/* Admin Portal */}
             <Link
               href={isAdminLoggedIn ? "/admin" : "/login"}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide uppercase transition-all duration-200 ${
@@ -96,7 +75,7 @@ export default function Navbar({ isAdminLoggedIn }: { isAdminLoggedIn?: boolean 
             </Link>
           </nav>
 
-          {/* Mobile Menu Toggle Button */}
+          {/* Mobile Controls */}
           <div className="flex md:hidden items-center gap-3">
             <Link
               href={isAdminLoggedIn ? "/admin" : "/login"}
@@ -115,7 +94,7 @@ export default function Navbar({ isAdminLoggedIn }: { isAdminLoggedIn?: boolean 
           </div>
         </div>
 
-        {/* Mobile Dropdown Panel */}
+        {/* Mobile Dropdown */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
@@ -140,15 +119,6 @@ export default function Navbar({ isAdminLoggedIn }: { isAdminLoggedIn?: boolean 
               >
                 About Showroom
               </button>
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-zinc-400 hover:text-zinc-200 text-sm py-1"
-              >
-                <GithubIcon className="w-4 h-4" />
-                GitHub Repository
-              </a>
             </motion.div>
           )}
         </AnimatePresence>
@@ -176,13 +146,13 @@ export default function Navbar({ isAdminLoggedIn }: { isAdminLoggedIn?: boolean 
                   <Sparkles className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">DieCast Vault</h3>
+                  <h3 className="text-xl font-bold text-white">Pattu&apos;s D.Garage</h3>
                   <p className="text-xs text-rose-400 font-mono">Curated Precision Showcase</p>
                 </div>
               </div>
 
               <p className="text-sm text-zinc-300 leading-relaxed mb-6">
-                DieCast Vault is a bespoke, digital showroom designed to highlight rare and precision-scaled die-cast model cars (1:64, 1:43, and 1:18). Inspired by the refined design aesthetics of Porsche, Apple, Nothing, Mini GT, and Inno64.
+                A personal digital showroom for precision-scaled die-cast model cars (1:64, 1:43, and 1:18). Curated with care and inspired by the refined aesthetics of iconic automotive design.
               </p>
 
               <div className="grid grid-cols-2 gap-3 p-4 bg-zinc-950/80 rounded-xl border border-zinc-800/80 mb-6 text-xs">
@@ -191,22 +161,14 @@ export default function Navbar({ isAdminLoggedIn }: { isAdminLoggedIn?: boolean 
                   <span className="text-zinc-200 font-medium">1:64, 1:43, 1:18</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block font-mono">Key Brands</span>
-                  <span className="text-zinc-200 font-medium">Porsche, Nissan, Ferrari</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block font-mono">Manufacturers</span>
-                  <span className="text-zinc-200 font-medium">Mini GT, Inno64, Ignition</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block font-mono">Security</span>
-                  <span className="text-zinc-200 font-medium">Supabase RLS Protected</span>
+                  <span className="text-zinc-500 block font-mono">Collection</span>
+                  <span className="text-zinc-200 font-medium">Personal Garage</span>
                 </div>
               </div>
 
               <button
                 onClick={() => setAboutOpen(false)}
-                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors"
+                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors cursor-pointer"
               >
                 Explore Collection
               </button>

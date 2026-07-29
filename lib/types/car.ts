@@ -5,12 +5,12 @@ export interface Car {
   manufacturer: string;
   series?: string | null;
   scale: string;
-  year: number;
+  year?: number | null;          // nullable — may be omitted for some entries
   color: string;
   material: string;
   opening_parts: boolean;
-  purchase_date?: string | null;
-  purchase_price?: number | null;
+  purchase_date?: string | null; // kept in DB, not surfaced in form
+  purchase_price?: number | null; // kept in DB, not surfaced in form
   description?: string | null;
   cover_image: string;
   created_at?: string;
@@ -32,8 +32,6 @@ export interface FilterState {
   brand: string;
   manufacturer: string;
   scale: string;
-  yearMin: string;
-  yearMax: string;
 }
 
-export type SortOption = "newest" | "oldest" | "year_desc" | "year_asc" | "name_asc";
+export type SortOption = "newest" | "oldest" | "name_asc";

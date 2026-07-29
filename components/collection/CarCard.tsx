@@ -54,7 +54,7 @@ export default function CarCard({ car }: CarCardProps) {
         <div className="p-5 space-y-3">
           <div className="flex items-center justify-between gap-2 text-xs font-mono text-zinc-400">
             <span className="text-rose-400 font-bold uppercase tracking-wider">{car.brand}</span>
-            <span>{car.year}</span>
+            {car.year != null && <span>{car.year}</span>}
           </div>
 
           <h3 className="text-base font-extrabold text-white group-hover:text-rose-400 transition-colors line-clamp-1">

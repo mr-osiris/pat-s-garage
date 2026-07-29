@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { Car, ArrowUp, Mail } from "lucide-react";
 
-// TODO: Replace with your actual email address
 const CONTACT_EMAIL = "youremail@example.com";
-const CONTACT_SUBJECT = "Diecast Collection — Praise / Trade Inquiry";
+const CONTACT_SUBJECT = "Pattu's D.Garage — Praise / Trade Inquiry";
 
 export default function Footer() {
   const scrollToTop = () => {
@@ -13,7 +12,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-[#09090b] border-t border-zinc-800/80 py-10 mt-20">
+    <footer className="bg-[#09090b] border-t border-zinc-800/80 py-10 mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           {/* Brand + Copyright */}
@@ -22,18 +21,18 @@ export default function Footer() {
               <Car className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-sm font-bold text-white tracking-wider font-mono">
-                DIECAST <span className="text-rose-500">VAULT</span>
+              <span className="text-sm font-bold text-white tracking-wide font-sans">
+                Pattu&apos;s{" "}
+                <span className="text-rose-500 font-mono">D.Garage</span>
               </span>
               <p className="text-[11px] text-zinc-500 font-mono">
-                © {new Date().getFullYear()} DieCast Vault. All rights reserved.
+                © {new Date().getFullYear()} Pattu&apos;s D.Garage. All rights reserved.
               </p>
             </div>
           </div>
 
-          {/* Contact + Scroll-to-top */}
+          {/* Links + Scroll-to-top */}
           <div className="flex items-center gap-5 text-xs font-mono">
-            {/* Email contact — the only contact method on the public site */}
             <a
               href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(CONTACT_SUBJECT)}`}
               className="flex items-center gap-1.5 text-zinc-400 hover:text-rose-400 transition-colors"
@@ -47,10 +46,6 @@ export default function Footer() {
               className="text-zinc-400 hover:text-white transition-colors"
             >
               Collection
-            </Link>
-
-            <Link href="/login" className="text-zinc-500 hover:text-rose-400 transition-colors">
-              Admin
             </Link>
 
             <button
