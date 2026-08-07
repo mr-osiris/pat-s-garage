@@ -123,3 +123,34 @@ CREATE POLICY "Admin Storage Delete Access"
   ON storage.objects
   FOR DELETE
   USING (bucket_id = 'car-images' AND auth.role() = 'authenticated');
+
+-- 8. Site Settings table (key-value store for admin-configurable options)
+CREATE TABLE IF NOT EXISTS public.site_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read settings (grid layout etc.)
+CREATE POLICY "Public Read Access for Site Settings"
+  ON public.site_settings
+  FOR SELECT
+  USING (true);
+
+-- Only authenticated admin can modify settings
+CREATE POLICY "Admin Insert Access for Site Settings"
+  ON public.site_settings
+  FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Admin Update Access for Site Settings"
+  ON public.site_settings
+  FOR UPDATE
+  USING (auth.role() = 'authenticated');
+
+-- Seed default grid layout
+INSERT INTO public.site_settings (key, value)
+VALUES ('grid_layout', '{"desktop": 3, "mobile": 1}'::jsonb)
+ON CONFLICT (key) DO NOTHING;

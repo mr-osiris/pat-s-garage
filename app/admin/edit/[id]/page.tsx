@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import CarForm from "@/components/admin/CarForm";
-import { getCarById, updateCar } from "@/lib/actions/car-actions";
+import { getCarById, updateCar, getDistinctBrandsAndManufacturers } from "@/lib/actions/car-actions";
 import { CarFormValues } from "@/lib/schemas/car-schema";
 import type { Metadata } from "next";
 
@@ -18,7 +18,10 @@ export async function generateMetadata({ params }: EditCarPageProps): Promise<Me
 
 export default async function EditCarPage({ params }: EditCarPageProps) {
   const { id } = await params;
-  const car = await getCarById(id);
+  const [car, { brands, manufacturers }] = await Promise.all([
+    getCarById(id),
+    getDistinctBrandsAndManufacturers(),
+  ]);
 
   if (!car) {
     notFound();
@@ -31,7 +34,14 @@ export default async function EditCarPage({ params }: EditCarPageProps) {
 
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <CarForm initialCar={car} onSubmitAction={handleUpdate} isEditing={true} />
+      <CarForm
+        initialCar={car}
+        onSubmitAction={handleUpdate}
+        isEditing={true}
+        existingBrands={brands}
+        existingManufacturers={manufacturers}
+      />
     </div>
   );
 }
+

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Car } from "@/lib/types/car";
 import DeleteModal from "./DeleteModal";
-import { Plus, Search, Edit2, Trash2, LogOut, ShieldCheck, ExternalLink, Flame } from "lucide-react";
-import { softDeleteCar } from "@/lib/actions/car-actions";
+import { Plus, Search, Edit2, Trash2, LogOut, ShieldCheck, ExternalLink, Flame, Wand2 } from "lucide-react";
+import { softDeleteCar, normalizeBrandsAndManufacturers } from "@/lib/actions/car-actions";
 
 interface AdminDashboardProps {
   cars: Car[];
@@ -18,6 +18,9 @@ export default function AdminDashboard({ cars }: AdminDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCarToDelete, setSelectedCarToDelete] = useState<Car | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isNormalizing, setIsNormalizing] = useState(false);
+  const [normalizeResult, setNormalizeResult] = useState<string | null>(null);
+
 
 
   const filteredCars = cars.filter(
@@ -82,6 +85,31 @@ export default function AdminDashboard({ cars }: AdminDashboardProps) {
             <Plus className="w-4 h-4" /> Add Car
           </Link>
           <button
+            onClick={async () => {
+              setIsNormalizing(true);
+              setNormalizeResult(null);
+              const res = await normalizeBrandsAndManufacturers();
+              setIsNormalizing(false);
+              if (res.success) {
+                const total = res.brandsFixed + res.manufacturersFixed;
+                setNormalizeResult(
+                  total === 0
+                    ? "No duplicates found — all clean!"
+                    : `Fixed ${res.brandsFixed} brand(s) and ${res.manufacturersFixed} manufacturer(s).`
+                );
+                if (total > 0) window.location.reload();
+              } else {
+                setNormalizeResult(`Error: ${res.error}`);
+              }
+            }}
+            disabled={isNormalizing}
+            className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-400 hover:border-amber-500/40 text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+            title="Fix duplicate brand/manufacturer entries caused by different casing"
+          >
+            <Wand2 className="w-3.5 h-3.5" />
+            {isNormalizing ? "Fixing..." : "Fix Duplicates"}
+          </button>
+          <button
             onClick={handleLogout}
             className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-rose-400 hover:border-rose-500/40 transition-colors cursor-pointer"
             title="Log Out Admin Session"
@@ -90,6 +118,13 @@ export default function AdminDashboard({ cars }: AdminDashboardProps) {
           </button>
         </div>
       </div>
+
+      {normalizeResult && (
+        <div className="p-3 bg-amber-950/30 border border-amber-500/30 rounded-xl text-amber-300 text-xs font-mono flex items-center justify-between">
+          <span>{normalizeResult}</span>
+          <button onClick={() => setNormalizeResult(null)} className="text-amber-500 hover:text-amber-300 ml-2 cursor-pointer">✕</button>
+        </div>
+      )}
 
       {/* Admin Quick Search & Bar */}
       <div className="flex items-center justify-between gap-4 bg-zinc-900/60 border border-zinc-800 p-4 rounded-2xl">

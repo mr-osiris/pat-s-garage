@@ -16,6 +16,8 @@ interface CarFormProps {
   initialCar?: Car | null;
   onSubmitAction: (values: CarFormValues) => Promise<{ success: boolean; error?: string }>;
   isEditing?: boolean;
+  existingBrands?: string[];
+  existingManufacturers?: string[];
 }
 
 // --------------------------------------------------------------------------
@@ -34,7 +36,7 @@ function makeKey() {
   return Math.random().toString(36).slice(2);
 }
 
-export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFormProps) {
+export default function CarForm({ initialCar, onSubmitAction, isEditing, existingBrands = [], existingManufacturers = [] }: CarFormProps) {
   const router = useRouter();
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -271,9 +273,15 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                 <input
                   type="text"
                   {...register("brand")}
+                  list="existing-brands"
                   placeholder="e.g. Honda, Porsche, Ferrari"
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
                 />
+                <datalist id="existing-brands">
+                  {existingBrands.map((b) => (
+                    <option key={b} value={b} />
+                  ))}
+                </datalist>
                 {errors.brand && (
                   <p className="text-rose-400 text-[11px] font-mono mt-1">{errors.brand.message}</p>
                 )}
@@ -287,9 +295,15 @@ export default function CarForm({ initialCar, onSubmitAction, isEditing }: CarFo
                 <input
                   type="text"
                   {...register("manufacturer")}
+                  list="existing-manufacturers"
                   placeholder="e.g. Hot Wheels Premium, Mini GT, Inno64"
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
                 />
+                <datalist id="existing-manufacturers">
+                  {existingManufacturers.map((m) => (
+                    <option key={m} value={m} />
+                  ))}
+                </datalist>
                 {errors.manufacturer && (
                   <p className="text-rose-400 text-[11px] font-mono mt-1">{errors.manufacturer.message}</p>
                 )}
