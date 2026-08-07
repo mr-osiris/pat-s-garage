@@ -35,3 +35,9 @@ export interface FilterState {
 }
 
 export type SortOption = "newest" | "oldest" | "name_asc";
+
+export interface GridLayout {
+  desktop: 3 | 4;
+  mobile: 1 | 2 | 3 | 4;
+  perPage: 9 | 12 | 16 | 20 | 24;
+}

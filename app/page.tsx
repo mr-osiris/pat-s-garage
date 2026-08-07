@@ -7,7 +7,7 @@ import MobileFilterDrawer from "@/components/filters/MobileFilterDrawer";
 import CollectionGrid from "@/components/collection/CollectionGrid";
 import Footer from "@/components/footer/Footer";
 import { getCars } from "@/lib/actions/car-actions";
-import { Car, FilterState } from "@/lib/types/car";
+import { Car, FilterState, GridLayout } from "@/lib/types/car";
 
 const initialFilterState: FilterState = {
   search: "",
@@ -22,11 +22,27 @@ export default function HomePage() {
   const [filters, setFilters] = useState<FilterState>(initialFilterState);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [gridLayout, setGridLayout] = useState<GridLayout>({ desktop: 3, mobile: 1, perPage: 12 });
 
   useEffect(() => {
     // Check local admin authentication state from cookie
     const hasAdminCookie = document.cookie.includes("vault_admin_auth=true");
     setIsAdminLoggedIn(hasAdminCookie);
+
+    // Read grid layout from local storage
+    const storedLayout = localStorage.getItem("vault_grid_layout");
+    if (storedLayout) {
+      try {
+        const parsed = JSON.parse(storedLayout);
+        setGridLayout({
+          desktop: parsed.desktop === 4 ? 4 : 3,
+          mobile: [1, 2, 3, 4].includes(parsed.mobile) ? parsed.mobile : 1,
+          perPage: [9, 12, 16, 20, 24].includes(parsed.perPage) ? parsed.perPage : 12,
+        });
+      } catch (e) {
+        // use defaults if parsing fails
+      }
+    }
 
     // Initial load of cars
     async function loadData() {
@@ -39,15 +55,33 @@ export default function HomePage() {
     loadData();
   }, []);
 
-  // Derive unique filter options from actual collection data (no hardcoded constants)
-  const uniqueBrands = useMemo(
-    () => Array.from(new Set(allCars.map((c) => c.brand))).sort(),
-    [allCars]
-  );
-  const uniqueManufacturers = useMemo(
-    () => Array.from(new Set(allCars.map((c) => c.manufacturer))).sort(),
-    [allCars]
-  );
+  const handleGridLayoutChange = (newLayout: Partial<GridLayout>) => {
+    setGridLayout((prev) => {
+      const updated = { ...prev, ...newLayout };
+      localStorage.setItem("vault_grid_layout", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Derive unique filter options from actual collection data (case-insensitive dedup)
+  const uniqueBrands = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of allCars) {
+      const key = c.brand.trim().toLowerCase();
+      if (!map.has(key)) map.set(key, c.brand.trim());
+    }
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b));
+  }, [allCars]);
+
+  const uniqueManufacturers = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of allCars) {
+      const key = c.manufacturer.trim().toLowerCase();
+      if (!map.has(key)) map.set(key, c.manufacturer.trim());
+    }
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b));
+  }, [allCars]);
+
   const uniqueScales = useMemo(
     () => Array.from(new Set(allCars.map((c) => c.scale))).sort(),
     [allCars]
@@ -109,6 +143,8 @@ export default function HomePage() {
             brands={uniqueBrands}
             manufacturers={uniqueManufacturers}
             scales={uniqueScales}
+            gridLayout={gridLayout}
+            onGridLayoutChange={handleGridLayoutChange}
           />
 
           {/* Desktop Layout Split: Left sidebar (4 cols) & Right grid (8 cols) */}
@@ -123,6 +159,8 @@ export default function HomePage() {
                 brands={uniqueBrands}
                 manufacturers={uniqueManufacturers}
                 scales={uniqueScales}
+                gridLayout={gridLayout}
+                onGridLayoutChange={handleGridLayoutChange}
               />
             </div>
 
@@ -137,7 +175,13 @@ export default function HomePage() {
                   ))}
                 </div>
               ) : (
-                <CollectionGrid cars={filteredCars} onResetFilters={handleResetFilters} />
+                <CollectionGrid
+                  cars={filteredCars}
+                  onResetFilters={handleResetFilters}
+                  desktopCols={gridLayout.desktop}
+                  mobileCols={gridLayout.mobile}
+                  perPage={gridLayout.perPage}
+                />
               )}
             </div>
           </div>

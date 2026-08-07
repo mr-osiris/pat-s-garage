@@ -1,7 +1,7 @@
 "use client";
 
-import { Search, RotateCcw, Filter, Car, Scale, Factory } from "lucide-react";
-import { FilterState } from "@/lib/types/car";
+import { Search, RotateCcw, Filter, Car, Scale, Factory, LayoutGrid, Monitor, Smartphone, Hash } from "lucide-react";
+import { FilterState, GridLayout } from "@/lib/types/car";
 
 interface FilterSidebarProps {
   filters: FilterState;
@@ -12,6 +12,8 @@ interface FilterSidebarProps {
   brands: string[];
   manufacturers: string[];
   scales: string[];
+  gridLayout: GridLayout;
+  onGridLayoutChange: (newLayout: Partial<GridLayout>) => void;
 }
 
 export default function FilterSidebar({
@@ -23,6 +25,8 @@ export default function FilterSidebar({
   brands,
   manufacturers,
   scales,
+  gridLayout,
+  onGridLayoutChange,
 }: FilterSidebarProps) {
   const isFiltered =
     filters.search !== "" ||
@@ -139,6 +143,107 @@ export default function FilterSidebar({
             </option>
           ))}
         </select>
+      </div>
+
+      {/* ── View Options (Grid & Pagination) ── */}
+      <div className="pt-6 border-t border-zinc-800 space-y-5">
+        <div className="flex items-center gap-2">
+          <LayoutGrid className="w-4 h-4 text-rose-500" />
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
+            View Options
+          </h2>
+        </div>
+
+        {/* Desktop Grid */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+            <Monitor className="w-3.5 h-3.5" />
+            <span className="font-semibold uppercase tracking-wider">Desktop Layout</span>
+          </div>
+          <div className="flex gap-2">
+            {([3, 4] as const).map((cols) => (
+              <button
+                key={cols}
+                onClick={() => onGridLayoutChange({ desktop: cols })}
+                className={`flex-1 flex flex-col items-center gap-2 px-3 py-2 rounded-xl border text-xs font-mono font-semibold transition-all cursor-pointer ${
+                  gridLayout.desktop === cols
+                    ? "bg-rose-600/20 border-rose-500/60 text-rose-400 shadow-sm shadow-rose-950/30"
+                    : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600"
+                }`}
+              >
+                <div className={`grid gap-0.5 ${cols === 3 ? "grid-cols-3" : "grid-cols-4"}`}>
+                  {Array.from({ length: cols * 2 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-2.5 h-1.5 rounded-sm ${
+                        gridLayout.desktop === cols ? "bg-rose-500/60" : "bg-zinc-700"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span>{cols}×{cols}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Grid */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+            <Smartphone className="w-3.5 h-3.5" />
+            <span className="font-semibold uppercase tracking-wider">Mobile Layout</span>
+          </div>
+          <div className="flex gap-2">
+            {([1, 2, 3, 4] as const).map((cols) => (
+              <button
+                key={cols}
+                onClick={() => onGridLayoutChange({ mobile: cols })}
+                className={`flex-1 flex flex-col items-center gap-2 px-2 py-2 rounded-xl border text-xs font-mono font-semibold transition-all cursor-pointer ${
+                  gridLayout.mobile === cols
+                    ? "bg-rose-600/20 border-rose-500/60 text-rose-400 shadow-sm shadow-rose-950/30"
+                    : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600"
+                }`}
+              >
+                <div className={`grid gap-0.5 ${
+                  cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : cols === 3 ? "grid-cols-3" : "grid-cols-4"
+                }`}>
+                  {Array.from({ length: cols * 2 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-2 h-1.5 rounded-sm ${
+                        gridLayout.mobile === cols ? "bg-rose-500/60" : "bg-zinc-700"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span>{cols}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Items Per Page */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+            <Hash className="w-3.5 h-3.5" />
+            <span className="font-semibold uppercase tracking-wider">Per Page</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {([9, 12, 16, 20, 24] as const).map((count) => (
+              <button
+                key={count}
+                onClick={() => onGridLayoutChange({ perPage: count })}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer ${
+                  gridLayout.perPage === count
+                    ? "bg-rose-600/20 border-rose-500/60 text-rose-400 shadow-sm shadow-rose-950/30"
+                    : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600"
+                }`}
+              >
+                {count}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Filter Stats Footer */}
